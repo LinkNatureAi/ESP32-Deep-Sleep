@@ -21,8 +21,8 @@ source. They are pins: 0,2,4,12-15,25-27,32-39.
 Author:
 Pranav Cherukupalli <cherukupallip@gmail.com>
 */
-
-#define BUTTON_PIN_BITMASK 0x200000000 // 2^33 in hex
+                                         //2    15    33 button pins
+#define BUTTON_PIN_BITMASK 0x200008004 // 2^2+2^15+2^33 in hex convert
 
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -46,6 +46,15 @@ void print_wakeup_reason(){
   }
 }
 
+/*
+Method to print the GPIO that triggered the wakeup
+*/
+void print_GPIO_wake_up(){
+  uint64_t GPIO_reason = esp_sleep_get_ext1_wakeup_status();
+  Serial.print("GPIO that triggered the wake up: GPIO ");
+  Serial.println((log(GPIO_reason))/log(2), 0);
+}
+  
 void setup(){
   Serial.begin(115200);
   delay(1000); //Take some time to open up the Serial Monitor
@@ -57,6 +66,9 @@ void setup(){
   //Print the wakeup reason for ESP32
   print_wakeup_reason();
 
+  //Print the GPIO used to wake up
+  print_GPIO_wake_up();
+
   /*
   First we configure the wake up source
   We set our ESP32 to wake up for an external trigger.
@@ -67,10 +79,10 @@ void setup(){
   Note that using internal pullups/pulldowns also requires
   RTC peripherals to be turned on.
   */
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1); //1 = High, 0 = Low
+  //esp_deep_sleep_enable_ext0_wakeup(GPIO_NUM_15,1); //1 = High, 0 = Low
 
   //If you were to use ext1, you would use it like
-  //esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ANY_HIGH);
+  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ANY_HIGH);
 
   //Go to sleep now
   Serial.println("Going to sleep now");
